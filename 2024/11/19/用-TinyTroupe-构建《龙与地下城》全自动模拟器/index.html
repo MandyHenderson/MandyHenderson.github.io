@@ -1,0 +1,666 @@
+
+  <!DOCTYPE html>
+  <html lang="zh-CN"  >
+  <head>
+  <meta charset="utf-8">
+  
+
+  
+
+  
+
+  
+  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};</script>
+  
+  
+  <title>
+    用 TinyTroupe 构建《龙与地下城》全自动模拟器 |
+    
+    Hexo
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap" media="print" onload="this.media&#x3D;&#39;all&#39;">
+  
+    <link rel="preload" href="//at.alicdn.com/t/c/font_4552607_tq6stt6tcg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  
+  
+    
+<link rel="stylesheet" href="/css/loader.css">
+
+  
+  
+    <meta name="description" content="最近哥们儿搞了个好玩的：用 TinyTroupe 做了个 D&amp;D 模拟器！最近哥们儿在刷开源项目的时候，瞅见了一个叫 TinyTroupe 的玩意儿。这东西原本是个超正经的生产力工具，用来模拟带有个性化特征的多智能体行为。微软的官方文档还列了一堆“正经”用途，比如：  广告分析：用虚拟用户群评估广告效果，省钱！ 产品反馈：让“虚拟专家”帮你挑出文档里的问题。 数据生成：生成一堆合成数据喂给">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用 TinyTroupe 构建《龙与地下城》全自动模拟器">
+<meta property="og:url" content="http://example.com/2024/11/19/%E7%94%A8-TinyTroupe-%E6%9E%84%E5%BB%BA%E3%80%8A%E9%BE%99%E4%B8%8E%E5%9C%B0%E4%B8%8B%E5%9F%8E%E3%80%8B%E5%85%A8%E8%87%AA%E5%8A%A8%E6%A8%A1%E6%8B%9F%E5%99%A8/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="最近哥们儿搞了个好玩的：用 TinyTroupe 做了个 D&amp;D 模拟器！最近哥们儿在刷开源项目的时候，瞅见了一个叫 TinyTroupe 的玩意儿。这东西原本是个超正经的生产力工具，用来模拟带有个性化特征的多智能体行为。微软的官方文档还列了一堆“正经”用途，比如：  广告分析：用虚拟用户群评估广告效果，省钱！ 产品反馈：让“虚拟专家”帮你挑出文档里的问题。 数据生成：生成一堆合成数据喂给">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-11-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2024-11-19T13:51:38.195Z">
+<meta property="article:author" content="Yichun Lu">
+<meta property="article:tag" content="D&amp;D">
+<meta property="article:tag" content="TinyTroupe">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+  
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/images/favicon.ico">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <link rel="preload" href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  
+  
+  
+    
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js"></script>
+
+  
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@reimujs/aos@0.0.1/dist/aos.css">
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+  <body>
+    
+  <div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi">
+        <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="#ff5252" />
+          <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+         M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="#ff5252" />
+        </svg>
+      </div>
+      <div class="loading-word">少女祈祷中...</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var startLoading = () => {
+      time = Date.now();
+      document.getElementById('loader').classList.remove("loading");
+    }
+    var endLoading = () => {
+      if (!time) {
+        document.body.style.overflow = 'auto';
+        document.getElementById('loader').classList.add("loading");
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          document.body.style.overflow = 'auto';
+          document.getElementById('loader').classList.add("loading");
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    document.getElementById('loader').addEventListener('click', endLoading);
+  </script>
+
+<div id="copy-tooltip" style="pointer-events: none; opacity: 0; transition: all 0.2s ease; position: fixed;top: 50%;left: 50%;z-index: 999;transform: translate(-50%, -50%);color: white;background: rgba(0, 0, 0, 0.5);padding: 10px 15px;border-radius: 10px;">
+</div>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav">
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/">首页</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/archives">归档</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/about">关于</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/friend">友链</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/CV">CV</a>
+      </span>
+    
+    <a id="main-nav-toggle" class="nav-icon"></a>
+  </nav>
+  <nav id="sub-nav">
+    
+      <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅" target="_blank"></a>
+    
+    
+    
+  </nav>
+</div>
+<header id="header">
+  
+    
+      <img fetchpriority="high" src="/images/banner.webp" alt="用 TinyTroupe 构建《龙与地下城》全自动模拟器">
+    
+  
+  <div id="header-outer">
+    <div id="header-title">
+      
+        
+        
+          <a href="/" id="logo">
+            <h1 data-aos="slide-up">用 TinyTroupe 构建《龙与地下城》全自动模拟器</h1>
+          </a>
+        
+      
+      
+        
+        <h2 id="subtitle-wrap" data-aos="slide-down">
+          
+        </h2>
+      
+    </div>
+  </div>
+</header>
+
+        <div id="content">
+          
+          <section id="main"><article id="post-用-TinyTroupe-构建《龙与地下城》全自动模拟器" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner" data-aos="fade-up">
+    <div class="article-meta">
+      <div class="article-date">
+  <a href="/2024/11/19/%E7%94%A8-TinyTroupe-%E6%9E%84%E5%BB%BA%E3%80%8A%E9%BE%99%E4%B8%8E%E5%9C%B0%E4%B8%8B%E5%9F%8E%E3%80%8B%E5%85%A8%E8%87%AA%E5%8A%A8%E6%A8%A1%E6%8B%9F%E5%99%A8/" class="article-date-link" data-aos="zoom-in">
+    <time datetime="2024-11-18T16:00:00.000Z" itemprop="datePublished">2024-11-19</time>
+    <time style="display: none;" id="post-update-time">2024-11-19</time>
+  </a>
+</div>
+
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Projects/" data-aos="zoom-in">Projects</a>
+  </div>
+
+
+    </div>
+    <div class="hr-line"></div>
+    
+
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+      
+        <h2 id="最近哥们儿搞了个好玩的：用-TinyTroupe-做了个-D-D-模拟器！"><a href="#最近哥们儿搞了个好玩的：用-TinyTroupe-做了个-D-D-模拟器！" class="headerlink" title="最近哥们儿搞了个好玩的：用 TinyTroupe 做了个 D&amp;D 模拟器！"></a>最近哥们儿搞了个好玩的：用 TinyTroupe 做了个 D&amp;D 模拟器！</h2><p>最近哥们儿在刷开源项目的时候，瞅见了一个叫 <strong>TinyTroupe</strong> 的玩意儿。这东西原本是个超正经的生产力工具，用来模拟带有个性化特征的多智能体行为。微软的官方文档还列了一堆“正经”用途，比如：</p>
+<ul>
+<li><strong>广告分析</strong>：用虚拟用户群评估广告效果，省钱！</li>
+<li><strong>产品反馈</strong>：让“虚拟专家”帮你挑出文档里的问题。</li>
+<li><strong>数据生成</strong>：生成一堆合成数据喂给你的模型。</li>
+<li><strong>脑暴场景</strong>：虚拟用户群低成本完成头脑风暴。</li>
+</ul>
+<p>一看就很严肃是不是？<br>但我脑洞大开，觉得这玩意儿不就是一个超适合 RPG 模拟的工具吗！于是就搞了一个 D&amp;D 风格的 <strong>全自动冒险模拟器</strong>，直接拉满我的快乐值。以下就是我整个项目的全过程！</p>
+<hr>
+<h2 id="效果展示"><a href="#效果展示" class="headerlink" title="效果展示"></a>效果展示</h2><p>为了让大家感受一下模拟器的效果，先给你们看看模拟中的片段，这里是模拟器中队伍面临哥布林埋伏的场景：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">USER --&gt; Thorin: [CONVERSATION]</span><br><span class="line">          &gt; 事件发生：一队哥布林埋伏在前方，你们必须决定战斗还是潜行通过。</span><br><span class="line">请讨论以下解决方案：直接冲锋，与哥布林正面对战。, 由Shade先潜行刺杀领头哥布林，减少敌人数量。,</span><br><span class="line">          &gt; 尝试谈判，让哥布林放你们过去。</span><br><span class="line">USER --&gt; Elena: [CONVERSATION]</span><br><span class="line">          &gt; 事件发生：一队哥布林埋伏在前方，你们必须决定战斗还是潜行通过。</span><br><span class="line">请讨论以下解决方案：直接冲锋，与哥布林正面对战。, 由Shade先潜行刺杀领头哥布林，减少敌人数量。,</span><br><span class="line">          &gt; 尝试谈判，让哥布林放你们过去。</span><br><span class="line">USER --&gt; Shade: [CONVERSATION]</span><br><span class="line">          &gt; 事件发生：一队哥布林埋伏在前方，你们必须决定战斗还是潜行通过。</span><br><span class="line">请讨论以下解决方案：直接冲锋，与哥布林正面对战。, 由Shade先潜行刺杀领头哥布林，减少敌人数量。,</span><br><span class="line">          &gt; 尝试谈判，让哥布林放你们过去。</span><br><span class="line">──────────────────────────────────────────── Dungeon Adventure step 1 of 4 ─────────────────────────────────────────────</span><br><span class="line">Thorin --&gt; Thorin: [THOUGHT]</span><br><span class="line">            &gt; I will now act a bit, and then issue DONE.</span><br><span class="line">Thorin acts: [TALK]</span><br><span class="line">            &gt; I understand the urgency of the situation. Let&#x27;s discuss the proposed plan: 1. Direct</span><br><span class="line">            &gt; confrontation with the enemy team led by Shade. 2. We should aim to reduce their</span><br><span class="line">            &gt; numbers. 3. We can strategize on how to outmaneuver them. It&#x27;s crucial that we act</span><br><span class="line">            &gt; swiftly and decisively.</span><br><span class="line">Thorin --&gt; Thorin: [THOUGHT]</span><br><span class="line">            &gt; I will now act a bit, and then issue DONE.</span><br><span class="line">Thorin acts: [DONE]</span><br><span class="line"></span><br><span class="line">Thorin --&gt; Elena: [CONVERSATION]</span><br><span class="line">            &gt; I understand the urgency of the situation. Let&#x27;s discuss the proposed plan: 1. Direct</span><br><span class="line">            &gt; confrontation with the enemy team led by Shade. 2. We should aim to reduce their</span><br><span class="line">            &gt; numbers. 3. We can strategize on how to outmaneuver them. It&#x27;s crucial that we act</span><br><span class="line">            &gt; swiftly and decisively.</span><br><span class="line">Thorin --&gt; Shade: [CONVERSATION]</span><br><span class="line">            &gt; I understand the urgency of the situation. Let&#x27;s discuss the proposed plan: 1. Direct</span><br><span class="line">            &gt; confrontation with the enemy team led by Shade. 2. We should aim to reduce their</span><br><span class="line">            &gt; numbers. 3. We can strategize on how to outmaneuver them. It&#x27;s crucial that we act</span><br><span class="line">            &gt; swiftly and decisively.</span><br><span class="line">Elena --&gt; Elena: [THOUGHT]</span><br><span class="line">           &gt; I will now act a bit, and then issue DONE.</span><br><span class="line">Elena acts: [TALK]</span><br><span class="line">           &gt; I agree with the proposed plan, Thorin. Direct confrontation is necessary, and with</span><br><span class="line">           &gt; Shade leading the charge, we can effectively reduce their numbers. Let&#x27;s also consider</span><br><span class="line">           &gt; how we can use the terrain to our advantage to outmaneuver them. We need to ensure</span><br><span class="line">           &gt; everyone is ready to act quickly and follow the strategy we outline.</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="部署你的模拟器"><a href="#部署你的模拟器" class="headerlink" title="部署你的模拟器"></a>部署你的模拟器</h2><h3 id="1-准备环境"><a href="#1-准备环境" class="headerlink" title="1. 准备环境"></a><strong>1. 准备环境</strong></h3><ol>
+<li><p>安装 <a target="_blank" rel="noopener" href="https://www.anaconda.com/">Anaconda</a>，并创建虚拟环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">conda create -n tinytroupe python=3.10</span><br><span class="line">conda activate tinytroupe</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>更新 pip：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -m pip install --upgrade pip</span><br></pre></td></tr></table></figure></li>
+</ol>
+<hr>
+<h3 id="2-安装-TinyTroupe"><a href="#2-安装-TinyTroupe" class="headerlink" title="2. 安装 TinyTroupe"></a><strong>2. 安装 TinyTroupe</strong></h3><p>克隆项目并安装依赖：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/microsoft/tinytroupe.git</span><br><span class="line"><span class="built_in">cd</span> tinytroupe</span><br><span class="line">pip install -e .</span><br><span class="line">*该情况所用时间会长一些请耐心等待，谢谢你们（我自己安装了很久</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="3-配置-API-密钥"><a href="#3-配置-API-密钥" class="headerlink" title="3. 配置 API 密钥"></a><strong>3. 配置 API 密钥</strong></h3><p>设置 OpenAI 或 Azure OpenAI 的密钥：</p>
+<ul>
+<li><p><strong>Linux&#x2F;macOS</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> OPENAI_API_KEY=your_api_key</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>Windows</strong>：<br>*请务必用powershell，cmd不行，这是一次性的环境嘟，所以各位同学and老师请注意一下！</p>
+<p>打开 PowerShell 并输入：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$env:OPENAI_API_KEY</span>=<span class="string">&quot;your_api_key&quot;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="4-添加你的代码"><a href="#4-添加你的代码" class="headerlink" title="4. 添加你的代码"></a><strong>4. 添加你的代码</strong></h3><p>在项目根目录新建文件夹 <code>tiny-test</code>，将以下两个文件放入其中：</p>
+<ul>
+<li>**<a href="downloads/tiny-test/config.ini">config.ini</a>**：API 配置文件</li>
+<li>**<a href="downloads/tiny-test/dnd.py">dnd.py</a>**：冒险逻辑实现</li>
+</ul>
+<p>运行冒险模拟器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python tiny-test/dnd.py</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="部署过程中可能遇到的问题"><a href="#部署过程中可能遇到的问题" class="headerlink" title="部署过程中可能遇到的问题"></a>部署过程中可能遇到的问题</h2><h3 id="1-API-密钥设置问题"><a href="#1-API-密钥设置问题" class="headerlink" title="1. API 密钥设置问题"></a>1. API 密钥设置问题</h3><p>如果环境变量未正确设置，可能会导致无法访问 OpenAI 的 API。</p>
+<hr>
+<h3 id="2-依赖安装问题"><a href="#2-依赖安装问题" class="headerlink" title="2. 依赖安装问题"></a>2. 依赖安装问题</h3><p>确保在虚拟环境中安装依赖，否则可能会出现冲突。</p>
+<hr>
+<p>希望你们玩得开心！ 🎲</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+      
+      
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/D-D/" rel="tag">D&amp;D</a></li><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/Python/" rel="tag">Python</a></li><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/TinyTroupe/" rel="tag">TinyTroupe</a></li></ul>
+
+
+    </footer>
+  </div>
+  
+    
+  <nav id="article-nav" data-aos="fade-up">
+    
+    
+    <div class="article-nav-link-wrap article-nav-link-right">
+      
+        
+        
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="Hello World" class="lazyload">
+        
+      
+      <a href="/2024/11/16/hello-world/"></a>
+      <div class="article-nav-caption">后一篇</div>
+      <h3 class="article-nav-title">
+        
+          Hello World
+        
+      </h3>
+    </div>
+    
+  </nav>
+
+
+  
+</article>
+
+
+
+
+
+
+</section>
+          
+            <aside id="sidebar">
+  <div class="sidebar-wrapper wrap-sticky">
+    <div class="sidebar-wrap" data-aos="fade-up">
+      
+        <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E8%BF%91%E5%93%A5%E4%BB%AC%E5%84%BF%E6%90%9E%E4%BA%86%E4%B8%AA%E5%A5%BD%E7%8E%A9%E7%9A%84%EF%BC%9A%E7%94%A8-TinyTroupe-%E5%81%9A%E4%BA%86%E4%B8%AA-D-D-%E6%A8%A1%E6%8B%9F%E5%99%A8%EF%BC%81"><span class="toc-number">1.</span> <span class="toc-text">最近哥们儿搞了个好玩的：用 TinyTroupe 做了个 D&amp;D 模拟器！</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%88%E6%9E%9C%E5%B1%95%E7%A4%BA"><span class="toc-number">2.</span> <span class="toc-text">效果展示</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2%E4%BD%A0%E7%9A%84%E6%A8%A1%E6%8B%9F%E5%99%A8"><span class="toc-number">3.</span> <span class="toc-text">部署你的模拟器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%87%86%E5%A4%87%E7%8E%AF%E5%A2%83"><span class="toc-number">3.1.</span> <span class="toc-text">1. 准备环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%89%E8%A3%85-TinyTroupe"><span class="toc-number">3.2.</span> <span class="toc-text">2. 安装 TinyTroupe</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E9%85%8D%E7%BD%AE-API-%E5%AF%86%E9%92%A5"><span class="toc-number">3.3.</span> <span class="toc-text">3. 配置 API 密钥</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E6%B7%BB%E5%8A%A0%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81"><span class="toc-number">3.4.</span> <span class="toc-text">4. 添加你的代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2%E8%BF%87%E7%A8%8B%E4%B8%AD%E5%8F%AF%E8%83%BD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">4.</span> <span class="toc-text">部署过程中可能遇到的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-API-%E5%AF%86%E9%92%A5%E8%AE%BE%E7%BD%AE%E9%97%AE%E9%A2%98"><span class="toc-number">4.1.</span> <span class="toc-text">1. API 密钥设置问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BE%9D%E8%B5%96%E5%AE%89%E8%A3%85%E9%97%AE%E9%A2%98"><span class="toc-number">4.2.</span> <span class="toc-text">2. 依赖安装问题</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.webp" data-sizes="auto" alt="Yichun Lu" class="lazyload">
+  <div class="sidebar-author-name">Yichun Lu</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">2</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">1</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">3</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">首页</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">归档</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">关于</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="友链"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">友链</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/CV" aria-label="CV"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">CV</div>
+    </div>
+  
+</div>
+</div>
+      
+      
+        <div class="sidebar-btn-wrapper" style="position:static">
+          <div class="sidebar-toc-btn current"></div>
+          <div class="sidebar-common-btn"></div>
+        </div>
+      
+    </div>
+  </div>
+
+  
+</aside>
+
+          
+        </div>
+        <footer id="footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info">
+    
+    <div>
+      <span class="icon-copyright"></span>
+      2020-2024
+      <span class="footer-info-sep"></span>
+      Yichun Lu
+    </div>
+    
+      <div>
+        基于&nbsp;<a href="https://hexo.io/" rel="noopener external nofollow noreferrer" target="_blank">Hexo</a>&nbsp;
+        Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" rel="noopener external nofollow noreferrer" target="_blank">Reimu</a>
+      </div>
+    
+    
+      <div>
+        <span class="icon-brush"></span>
+        1.2k
+        &nbsp;|&nbsp;
+        <span class="icon-coffee"></span>
+        00:05
+      </div>
+    
+    
+    
+    
+      <div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv">总访问量&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv">总访客量&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+      </div>
+    
+  </div>
+</footer>
+
+        <div class="sidebar-top">
+          <img src="/images/taichi.png" height="50" width="50" alt="backtop" />
+          <div class="arrow-up"></div>
+        </div>
+        <div id="mask"></div>
+      </div>
+      <nav id="mobile-nav">
+  <div class="sidebar-wrap">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E8%BF%91%E5%93%A5%E4%BB%AC%E5%84%BF%E6%90%9E%E4%BA%86%E4%B8%AA%E5%A5%BD%E7%8E%A9%E7%9A%84%EF%BC%9A%E7%94%A8-TinyTroupe-%E5%81%9A%E4%BA%86%E4%B8%AA-D-D-%E6%A8%A1%E6%8B%9F%E5%99%A8%EF%BC%81"><span class="toc-number">1.</span> <span class="toc-text">最近哥们儿搞了个好玩的：用 TinyTroupe 做了个 D&amp;D 模拟器！</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%88%E6%9E%9C%E5%B1%95%E7%A4%BA"><span class="toc-number">2.</span> <span class="toc-text">效果展示</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2%E4%BD%A0%E7%9A%84%E6%A8%A1%E6%8B%9F%E5%99%A8"><span class="toc-number">3.</span> <span class="toc-text">部署你的模拟器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%87%86%E5%A4%87%E7%8E%AF%E5%A2%83"><span class="toc-number">3.1.</span> <span class="toc-text">1. 准备环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%89%E8%A3%85-TinyTroupe"><span class="toc-number">3.2.</span> <span class="toc-text">2. 安装 TinyTroupe</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E9%85%8D%E7%BD%AE-API-%E5%AF%86%E9%92%A5"><span class="toc-number">3.3.</span> <span class="toc-text">3. 配置 API 密钥</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E6%B7%BB%E5%8A%A0%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81"><span class="toc-number">3.4.</span> <span class="toc-text">4. 添加你的代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2%E8%BF%87%E7%A8%8B%E4%B8%AD%E5%8F%AF%E8%83%BD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">4.</span> <span class="toc-text">部署过程中可能遇到的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-API-%E5%AF%86%E9%92%A5%E8%AE%BE%E7%BD%AE%E9%97%AE%E9%A2%98"><span class="toc-number">4.1.</span> <span class="toc-text">1. API 密钥设置问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BE%9D%E8%B5%96%E5%AE%89%E8%A3%85%E9%97%AE%E9%A2%98"><span class="toc-number">4.2.</span> <span class="toc-text">2. 依赖安装问题</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.webp" data-sizes="auto" alt="Yichun Lu" class="lazyload">
+  <div class="sidebar-author-name">Yichun Lu</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">2</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">1</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">3</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">首页</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">归档</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">关于</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="友链"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">友链</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/CV" aria-label="CV"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">CV</div>
+    </div>
+  
+</div>
+</div>
+    
+  </div>
+  
+    <div class="sidebar-btn-wrapper">
+      <div class="sidebar-toc-btn current"></div>
+      <div class="sidebar-common-btn"></div>
+    </div>
+  
+</nav>
+
+    </div>
+    
+    
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+  
+<script src="/js/aos.js"></script>
+
+  <script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aosInit);
+    } else {
+      aosInit();
+    }
+  </script>
+
+
+
+<script src="/js/pjax_script.js" data-pjax></script>
+
+
+<script type="module" data-pjax>
+  import PhotoSwipeLightbox from "https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js";
+  
+  const pswp = () => {
+    if (_$$('.article-entry a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-entry',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    if(_$$('.article-gallery a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-gallery',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    window.lightboxStatus = 'done';
+    window.removeEventListener('lightbox:ready', pswp);
+  }
+  if(window.lightboxStatus === 'ready') {
+    pswp()
+  } else {
+    window.addEventListener('lightbox:ready', pswp);
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+<script src="https://npm.webcache.cn/mouse-firework@0.0.4/dist/index.umd.js"></script>
+
+  <script>
+    window.firework && window.firework(JSON.parse('{"excludeElements":["a","button"],"particles":[{"shape":"circle","move":["emit"],"easing":"easeOutExpo","colors":["#ff5252","#ff7c7c","#ffafaf","#ffd0d0"],"number":20,"duration":[1200,1800],"shapeOptions":{"radius":[16,32],"alpha":[0.3,0.5]}},{"shape":"circle","move":["diffuse"],"easing":"easeOutExpo","colors":["#ff0000"],"number":1,"duration":[1200,1800],"shapeOptions":{"radius":20,"alpha":[0.2,0.5],"lineWidth":6}}]}'))
+  </script>
+
+
+
+
+
+
+
+  
+<script src="https://npm.webcache.cn/quicklink@2.3.0/dist/quicklink.umd.js"></script>
+
+  <script data-pjax>
+    window.quicklink?.listen({
+      timeout: 3000,
+      priority: true,
+      ignores: []
+    });
+  </script>
+
+
+<div id="lazy-script">
+  <div>
+    
+  </div>
+</div>
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '0.3.3' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" async></script>
+
+
+
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
+
+  <!-- hexo injector body_end start -->
+<script src="/js/insert_highlight.js" data-pjax></script>
+<!-- hexo injector body_end end --></body>
+  </html>
+
