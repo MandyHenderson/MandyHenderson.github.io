@@ -1,0 +1,703 @@
+
+  <!DOCTYPE html>
+  <html lang="zh-CN"  >
+  <head>
+  <meta charset="utf-8">
+  
+
+  
+
+  
+
+  
+  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};</script>
+  
+  
+  <title>
+    从学术项目到爬虫实践：MediaCrawler 部署与优化 |
+    
+    Hexo
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap" media="print" onload="this.media&#x3D;&#39;all&#39;">
+  
+    <link rel="preload" href="//at.alicdn.com/t/c/font_4552607_tq6stt6tcg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  
+  
+    
+<link rel="stylesheet" href="/css/loader.css">
+
+  
+  
+    <meta name="description" content="Why MediaCrawler大家好！又是我&#x3D;&#x3D;，本人最近忙得要死，没有精力去撰写 AUTOGEN 的 blog 了，虽然我也很想哈：），奈何时间实在不允许，有空大伙自己学学吧。今天要介绍的是 MediaCrawler 项目！ 背景最近啊，我忙啥呢？只能说我在和 Prof. He 合作做一个学术项目，需要从小红书上获取大量公开数据。但你知道的，小红书的防爬机制那叫一个严！ 传">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从学术项目到爬虫实践：MediaCrawler 部署与优化">
+<meta property="og:url" content="http://example.com/2024/12/18/%E5%B0%8F%E7%BA%A2%E4%B9%A6%E8%B6%85%E7%BA%A7%E7%88%AC%E5%8F%96/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Why MediaCrawler大家好！又是我&#x3D;&#x3D;，本人最近忙得要死，没有精力去撰写 AUTOGEN 的 blog 了，虽然我也很想哈：），奈何时间实在不允许，有空大伙自己学学吧。今天要介绍的是 MediaCrawler 项目！ 背景最近啊，我忙啥呢？只能说我在和 Prof. He 合作做一个学术项目，需要从小红书上获取大量公开数据。但你知道的，小红书的防爬机制那叫一个严！ 传">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-12-18T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-12-18T07:17:15.107Z">
+<meta property="article:author" content="Yichun Lu">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="MediaCrawler">
+<meta property="article:tag" content="爬虫优化">
+<meta name="twitter:card" content="summary">
+  
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/images/favicon.ico">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <link rel="preload" href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  
+  
+  
+    
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js"></script>
+
+  
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@reimujs/aos@0.0.1/dist/aos.css">
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+  <body>
+    
+  <div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi">
+        <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="#ff5252" />
+          <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+         M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="#ff5252" />
+        </svg>
+      </div>
+      <div class="loading-word">少女祈祷中...</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var startLoading = () => {
+      time = Date.now();
+      document.getElementById('loader').classList.remove("loading");
+    }
+    var endLoading = () => {
+      if (!time) {
+        document.body.style.overflow = 'auto';
+        document.getElementById('loader').classList.add("loading");
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          document.body.style.overflow = 'auto';
+          document.getElementById('loader').classList.add("loading");
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    document.getElementById('loader').addEventListener('click', endLoading);
+  </script>
+
+<div id="copy-tooltip" style="pointer-events: none; opacity: 0; transition: all 0.2s ease; position: fixed;top: 50%;left: 50%;z-index: 999;transform: translate(-50%, -50%);color: white;background: rgba(0, 0, 0, 0.5);padding: 10px 15px;border-radius: 10px;">
+</div>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav">
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/">首页</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/archives">归档</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/about">关于</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/friend">友链</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/cv">简历</a>
+      </span>
+    
+    <a id="main-nav-toggle" class="nav-icon"></a>
+  </nav>
+  <nav id="sub-nav">
+    
+      <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅" target="_blank"></a>
+    
+    
+    
+  </nav>
+</div>
+<header id="header">
+  
+    
+      <img fetchpriority="high" src="/images/banner.webp" alt="从学术项目到爬虫实践：MediaCrawler 部署与优化">
+    
+  
+  <div id="header-outer">
+    <div id="header-title">
+      
+        
+        
+          <a href="/" id="logo">
+            <h1 data-aos="slide-up">从学术项目到爬虫实践：MediaCrawler 部署与优化</h1>
+          </a>
+        
+      
+      
+        
+        <h2 id="subtitle-wrap" data-aos="slide-down">
+          
+        </h2>
+      
+    </div>
+  </div>
+</header>
+
+        <div id="content">
+          
+          <section id="main"><article id="post-小红书超级爬取" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner" data-aos="fade-up">
+    <div class="article-meta">
+      <div class="article-date">
+  <a href="/2024/12/18/%E5%B0%8F%E7%BA%A2%E4%B9%A6%E8%B6%85%E7%BA%A7%E7%88%AC%E5%8F%96/" class="article-date-link" data-aos="zoom-in">
+    <time datetime="2024-12-18T04:00:00.000Z" itemprop="datePublished">2024-12-18</time>
+    <time style="display: none;" id="post-update-time">2024-12-18</time>
+  </a>
+</div>
+
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/" data-aos="zoom-in">技术分享</a><a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/%E7%88%AC%E8%99%AB/" data-aos="zoom-in">爬虫</a>
+  </div>
+
+
+    </div>
+    <div class="hr-line"></div>
+    
+
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+      
+        <h2 id="Why-MediaCrawler"><a href="#Why-MediaCrawler" class="headerlink" title="Why MediaCrawler"></a>Why MediaCrawler</h2><p>大家好！又是我&#x3D;&#x3D;，本人最近忙得要死，没有精力去撰写 AUTOGEN 的 blog 了，虽然我也很想哈：），奈何时间实在不允许，有空大伙自己学学吧。今天要介绍的是 MediaCrawler 项目！</p>
+<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>最近啊，我忙啥呢？只能说我在和 <strong>Prof. He</strong> 合作做一个学术项目，需要从小红书上获取大量公开数据。但你知道的，小红书的防爬机制那叫一个严！</p>
+<p>传统的爬虫方法，比如 <code>requests</code>、<code>scrapy</code>、<code>selenium</code> 等，根本吃不开。复杂的动态加载、加密参数让我摸爬滚打好一阵子。最终还有万能验证码劝退，简直是造孽。</p>
+<p>最后，我选择了 <strong>MediaCrawler Pro</strong> 版本，成功解决了数据抓取的技术难题，并支持 MySQL 数据存储、多账号代理，非常好用！不过 Pro 版本价格不菲，学习成本高，并且需要本地部署后进一步修改。</p>
+<p>本文将分享如何部署这个神器，并介绍如何通过延迟优化让爬虫更加稳健，不被反爬秒封！✨</p>
+<hr>
+<h2 id="部署-MediaCrawler-的完整流程"><a href="#部署-MediaCrawler-的完整流程" class="headerlink" title="部署 MediaCrawler 的完整流程"></a>部署 MediaCrawler 的完整流程</h2><h3 id="1-准备-Python-环境"><a href="#1-准备-Python-环境" class="headerlink" title="1. 准备 Python 环境"></a>1. 准备 Python 环境</h3><p>首先，确保安装以下环境：</p>
+<ul>
+<li>Python 版本 &gt;&#x3D; 3.9</li>
+<li>Node.js 版本 &gt;&#x3D; 16（部分功能需要）</li>
+</ul>
+<p>然后，克隆项目并进入项目目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 克隆项目代码</span></span><br><span class="line">git <span class="built_in">clone</span> https://github.com/NanmiCoder/MediaCrawler.git</span><br><span class="line"><span class="built_in">cd</span> MediaCrawler</span><br></pre></td></tr></table></figure>
+
+<p>创建并激活虚拟环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建虚拟环境</span></span><br><span class="line">python -m venv venv</span><br><span class="line"></span><br><span class="line"><span class="comment"># 激活虚拟环境（根据系统选择命令）</span></span><br><span class="line"><span class="comment"># macOS/Linux</span></span><br><span class="line"><span class="built_in">source</span> venv/bin/activate</span><br><span class="line"><span class="comment"># Windows</span></span><br><span class="line">venv\Scripts\activate</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-安装依赖"><a href="#2-安装依赖" class="headerlink" title="2. 安装依赖"></a>2. 安装依赖</h3><p>安装项目所需的依赖：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install -r requirements.txt</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-安装-Playwright-浏览器驱动"><a href="#3-安装-Playwright-浏览器驱动" class="headerlink" title="3. 安装 Playwright 浏览器驱动"></a>3. 安装 Playwright 浏览器驱动</h3><p>安装 Playwright 驱动：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">playwright install</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-启动爬虫"><a href="#4-启动爬虫" class="headerlink" title="4. 启动爬虫"></a>4. 启动爬虫</h3><p>以下是几个常见的操作示例：</p>
+<ul>
+<li><p><strong>关键词搜索</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python main.py --platform xhs --lt qrcode --<span class="built_in">type</span> search</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>指定帖子抓取</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python main.py --platform xhs --lt qrcode --<span class="built_in">type</span> detail</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>获取帮助</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python main.py --<span class="built_in">help</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="5-数据存储选项"><a href="#5-数据存储选项" class="headerlink" title="5. 数据存储选项"></a>5. 数据存储选项</h3><p>根据需求选择存储方式：</p>
+<ul>
+<li><p><strong>MySQL</strong>：推荐将数据存入 MySQL 数据库。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python db.py  <span class="comment"># 初始化数据库表结构</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>CSV&#x2F;JSON</strong>：测试环境可直接保存到本地文件，路径为 <code>data/</code> 文件夹。</p>
+</li>
+</ul>
+<hr>
+<h2 id="基础配置说明"><a href="#基础配置说明" class="headerlink" title="基础配置说明"></a>基础配置说明</h2><p>以下是一些基础的配置代码示例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 基础配置</span></span><br><span class="line">PLATFORM = <span class="string">&quot;xhs&quot;</span>  <span class="comment"># 平台选择，例如小红书</span></span><br><span class="line">KEYWORDS = <span class="string">&quot;编程副业,编程兼职&quot;</span>  <span class="comment"># 关键词搜索，多个关键词用英文逗号分隔</span></span><br><span class="line">LOGIN_TYPE = <span class="string">&quot;qrcode&quot;</span>  <span class="comment"># 登录方式，可选 qrcode（二维码登录）、phone 或 cookie</span></span><br><span class="line">COOKIES = <span class="string">&quot;&quot;</span>  <span class="comment"># 如果使用 cookie 登录，可以在此填写</span></span><br><span class="line">SORT_TYPE = <span class="string">&quot;popularity_descending&quot;</span>  <span class="comment"># 排序方式，根据平台支持的选项设置</span></span><br><span class="line">CRAWLER_TYPE = <span class="string">&quot;search&quot;</span>  <span class="comment"># 爬取类型：关键词搜索、帖子详情或创作者主页数据</span></span><br><span class="line">UA = <span class="string">&#x27;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36&#x27;</span>  <span class="comment"># 自定义 User Agent</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 数据存储类型，支持 csv、db 或 json</span></span><br><span class="line">SAVE_DATA_OPTION = <span class="string">&quot;json&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 并发爬取数量</span></span><br><span class="line">MAX_CONCURRENCY_NUM = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 是否开启代理和图片、评论爬取</span></span><br><span class="line">ENABLE_IP_PROXY = <span class="literal">False</span></span><br><span class="line">ENABLE_GET_IMAGES = <span class="literal">False</span></span><br><span class="line">ENABLE_GET_COMMENTS = <span class="literal">True</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 爬取数量限制</span></span><br><span class="line">CRAWLER_MAX_NOTES_COUNT = <span class="number">200</span></span><br><span class="line">CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = <span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 爬取的起始页数</span></span><br><span class="line">START_PAGE = <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>以上配置提供了灵活性，可以根据项目需求进行调整。</p>
+<hr>
+<h2 id="如何优化延迟，避免账号封禁"><a href="#如何优化延迟，避免账号封禁" class="headerlink" title="如何优化延迟，避免账号封禁"></a>如何优化延迟，避免账号封禁</h2><p>爬虫最怕啥？就是被封号！为了减少被目标网站发现的风险，我针对源码增加了随机延迟，效果显著。</p>
+<h3 id="文件路径"><a href="#文件路径" class="headerlink" title="文件路径"></a>文件路径</h3><p><code>E:\MediaCrawler-main\media_platform\xhs\core.py</code></p>
+<h3 id="修改内容"><a href="#修改内容" class="headerlink" title="修改内容"></a>修改内容</h3><h4 id="1-在-get-note-detail-async-task-方法中加入延迟"><a href="#1-在-get-note-detail-async-task-方法中加入延迟" class="headerlink" title="1. 在 get_note_detail_async_task 方法中加入延迟"></a>1. 在 <code>get_note_detail_async_task</code> 方法中加入延迟</h4><p>找到以下代码段：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> note_detail_from_html:</span><br><span class="line">    note_detail_from_html = (</span><br><span class="line">        <span class="keyword">await</span> <span class="variable language_">self</span>.xhs_client.get_note_by_id_from_html(</span><br><span class="line">            note_id, xsec_source, xsec_token, enable_cookie=<span class="literal">False</span></span><br><span class="line">        )</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+
+<p>在该段代码之后，插入以下延迟代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 添加随机延迟，模拟用户行为</span></span><br><span class="line">delay = random.uniform(<span class="number">1</span>, <span class="number">3</span>)  <span class="comment"># 随机延迟 1 到 3 秒</span></span><br><span class="line">time.sleep(delay)</span><br></pre></td></tr></table></figure>
+
+<p>修改后代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> note_detail_from_html:</span><br><span class="line">    note_detail_from_html = (</span><br><span class="line">        <span class="keyword">await</span> <span class="variable language_">self</span>.xhs_client.get_note_by_id_from_html(</span><br><span class="line">            note_id, xsec_source, xsec_token, enable_cookie=<span class="literal">False</span></span><br><span class="line">        )</span><br><span class="line">    )</span><br><span class="line">    <span class="comment"># 添加随机延迟，模拟用户行为</span></span><br><span class="line">    delay = random.uniform(<span class="number">1</span>, <span class="number">3</span>)  <span class="comment"># 随机延迟 1 到 3 秒</span></span><br><span class="line">    time.sleep(delay)</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-在-get-comments-方法中加入延迟"><a href="#2-在-get-comments-方法中加入延迟" class="headerlink" title="2. 在 get_comments 方法中加入延迟"></a>2. 在 <code>get_comments</code> 方法中加入延迟</h4><p>找到以下代码段：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">await</span> <span class="variable language_">self</span>.xhs_client.get_note_all_comments(</span><br><span class="line">    note_id=note_id,</span><br><span class="line">    xsec_token=xsec_token,</span><br><span class="line">    crawl_interval=crawl_interval,</span><br><span class="line">    callback=xhs_store.batch_update_xhs_note_comments,</span><br><span class="line">    max_count=CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>在代码执行前，加入延迟：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 添加随机延迟，防止评论请求过于频繁</span></span><br><span class="line">delay = random.uniform(<span class="number">2</span>, <span class="number">5</span>)  <span class="comment"># 随机延迟 2 到 5 秒</span></span><br><span class="line">time.sleep(delay)</span><br></pre></td></tr></table></figure>
+
+<p>修改后代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 添加随机延迟，防止评论请求过于频繁</span></span><br><span class="line">delay = random.uniform(<span class="number">2</span>, <span class="number">5</span>)  <span class="comment"># 随机延迟 2 到 5 秒</span></span><br><span class="line">time.sleep(delay)</span><br><span class="line"></span><br><span class="line"><span class="keyword">await</span> <span class="variable language_">self</span>.xhs_client.get_note_all_comments(</span><br><span class="line">    note_id=note_id,</span><br><span class="line">    xsec_token=xsec_token,</span><br><span class="line">    crawl_interval=crawl_interval,</span><br><span class="line">    callback=xhs_store.batch_update_xhs_note_comments,</span><br><span class="line">    max_count=CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-在-fetch-creator-notes-detail-方法中加入延迟"><a href="#3-在-fetch-creator-notes-detail-方法中加入延迟" class="headerlink" title="3. 在 fetch_creator_notes_detail 方法中加入延迟"></a>3. 在 <code>fetch_creator_notes_detail</code> 方法中加入延迟</h4><p>找到以下代码段：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">note_details = <span class="keyword">await</span> asyncio.gather(*task_list)</span><br></pre></td></tr></table></figure>
+
+<p>在代码之前加入延迟：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 为每个任务列表添加延迟，避免触发反爬机制</span></span><br><span class="line">delay = random.uniform(<span class="number">1</span>, <span class="number">4</span>)  <span class="comment"># 随机延迟 1 到 4 秒</span></span><br><span class="line">time.sleep(delay)</span><br></pre></td></tr></table></figure>
+
+<p>修改后代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 为每个任务列表添加延迟，避免触发反爬机制</span></span><br><span class="line">delay = random.uniform(<span class="number">1</span>, <span class="number">4</span>)  <span class="comment"># 随机延迟 1 到 4 秒</span></span><br><span class="line">time.sleep(delay)</span><br><span class="line"></span><br><span class="line">note_details = <span class="keyword">await</span> asyncio.gather(*task_list)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="声明"><a href="#声明" class="headerlink" title="声明"></a>声明</h2><p>⚠️ <strong>声明：</strong></p>
+<p>本代码及其优化仅供学习和研究目的使用。使用者需严格遵守以下原则：</p>
+<ol>
+<li><strong>不得用于商业用途</strong>。</li>
+<li><strong>合理控制请求频率</strong>，避免对目标平台造成运营干扰。</li>
+<li><strong>遵守目标平台的使用条款和 robots.txt 规则</strong>。</li>
+</ol>
+<p>通过以上部署和优化，你的爬虫将更加稳定并降低被封禁的风险。希望这些经验对你有所帮助！🤗</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+      
+      
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/MediaCrawler/" rel="tag">MediaCrawler</a></li><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/Python/" rel="tag">Python</a></li><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/%E7%88%AC%E8%99%AB%E4%BC%98%E5%8C%96/" rel="tag">爬虫优化</a></li></ul>
+
+
+    </footer>
+  </div>
+  
+    
+  <nav id="article-nav" data-aos="fade-up">
+    
+    
+    <div class="article-nav-link-wrap article-nav-link-right">
+      
+        
+        
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="用 TinyTroupe 构建《龙与地下城》全自动模拟器" class="lazyload">
+        
+      
+      <a href="/2024/11/19/%E7%94%A8-TinyTroupe-%E6%9E%84%E5%BB%BA%E3%80%8A%E9%BE%99%E4%B8%8E%E5%9C%B0%E4%B8%8B%E5%9F%8E%E3%80%8B%E5%85%A8%E8%87%AA%E5%8A%A8%E6%A8%A1%E6%8B%9F%E5%99%A8/"></a>
+      <div class="article-nav-caption">后一篇</div>
+      <h3 class="article-nav-title">
+        
+          用 TinyTroupe 构建《龙与地下城》全自动模拟器
+        
+      </h3>
+    </div>
+    
+  </nav>
+
+
+  
+</article>
+
+
+
+
+
+
+</section>
+          
+            <aside id="sidebar">
+  <div class="sidebar-wrapper wrap-sticky">
+    <div class="sidebar-wrap" data-aos="fade-up">
+      
+        <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Why-MediaCrawler"><span class="toc-number">1.</span> <span class="toc-text">Why MediaCrawler</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%83%8C%E6%99%AF"><span class="toc-number">1.1.</span> <span class="toc-text">背景</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2-MediaCrawler-%E7%9A%84%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">部署 MediaCrawler 的完整流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%87%86%E5%A4%87-Python-%E7%8E%AF%E5%A2%83"><span class="toc-number">2.1.</span> <span class="toc-text">1. 准备 Python 环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96"><span class="toc-number">2.2.</span> <span class="toc-text">2. 安装依赖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%AE%89%E8%A3%85-Playwright-%E6%B5%8F%E8%A7%88%E5%99%A8%E9%A9%B1%E5%8A%A8"><span class="toc-number">2.3.</span> <span class="toc-text">3. 安装 Playwright 浏览器驱动</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%90%AF%E5%8A%A8%E7%88%AC%E8%99%AB"><span class="toc-number">2.4.</span> <span class="toc-text">4. 启动爬虫</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E9%80%89%E9%A1%B9"><span class="toc-number">2.5.</span> <span class="toc-text">5. 数据存储选项</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E"><span class="toc-number">3.</span> <span class="toc-text">基础配置说明</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E4%BC%98%E5%8C%96%E5%BB%B6%E8%BF%9F%EF%BC%8C%E9%81%BF%E5%85%8D%E8%B4%A6%E5%8F%B7%E5%B0%81%E7%A6%81"><span class="toc-number">4.</span> <span class="toc-text">如何优化延迟，避免账号封禁</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E8%B7%AF%E5%BE%84"><span class="toc-number">4.1.</span> <span class="toc-text">文件路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%AE%E6%94%B9%E5%86%85%E5%AE%B9"><span class="toc-number">4.2.</span> <span class="toc-text">修改内容</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%9C%A8-get-note-detail-async-task-%E6%96%B9%E6%B3%95%E4%B8%AD%E5%8A%A0%E5%85%A5%E5%BB%B6%E8%BF%9F"><span class="toc-number">4.2.1.</span> <span class="toc-text">1. 在 get_note_detail_async_task 方法中加入延迟</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%9C%A8-get-comments-%E6%96%B9%E6%B3%95%E4%B8%AD%E5%8A%A0%E5%85%A5%E5%BB%B6%E8%BF%9F"><span class="toc-number">4.2.2.</span> <span class="toc-text">2. 在 get_comments 方法中加入延迟</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%9C%A8-fetch-creator-notes-detail-%E6%96%B9%E6%B3%95%E4%B8%AD%E5%8A%A0%E5%85%A5%E5%BB%B6%E8%BF%9F"><span class="toc-number">4.2.3.</span> <span class="toc-text">3. 在 fetch_creator_notes_detail 方法中加入延迟</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A3%B0%E6%98%8E"><span class="toc-number">5.</span> <span class="toc-text">声明</span></a></li></ol>
+      
+  </div>
+</div>
+</div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.webp" data-sizes="auto" alt="Yichun Lu" class="lazyload">
+  <div class="sidebar-author-name">Yichun Lu</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">3</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">3</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">5</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">首页</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">归档</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">关于</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="友链"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">友链</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/cv" aria-label="简历"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">简历</div>
+    </div>
+  
+</div>
+</div>
+      
+      
+        <div class="sidebar-btn-wrapper" style="position:static">
+          <div class="sidebar-toc-btn current"></div>
+          <div class="sidebar-common-btn"></div>
+        </div>
+      
+    </div>
+  </div>
+
+  
+</aside>
+
+          
+        </div>
+        <footer id="footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info">
+    
+    <div>
+      <span class="icon-copyright"></span>
+      2020-2024
+      <span class="footer-info-sep"></span>
+      Yichun Lu
+    </div>
+    
+      <div>
+        基于&nbsp;<a href="https://hexo.io/" rel="noopener external nofollow noreferrer" target="_blank">Hexo</a>&nbsp;
+        Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" rel="noopener external nofollow noreferrer" target="_blank">Reimu</a>
+      </div>
+    
+    
+      <div>
+        <span class="icon-brush"></span>
+        2.6k
+        &nbsp;|&nbsp;
+        <span class="icon-coffee"></span>
+        00:11
+      </div>
+    
+    
+    
+    
+      <div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv">总访问量&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv">总访客量&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+      </div>
+    
+  </div>
+</footer>
+
+        <div class="sidebar-top">
+          <img src="/images/taichi.png" height="50" width="50" alt="backtop" />
+          <div class="arrow-up"></div>
+        </div>
+        <div id="mask"></div>
+      </div>
+      <nav id="mobile-nav">
+  <div class="sidebar-wrap">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Why-MediaCrawler"><span class="toc-number">1.</span> <span class="toc-text">Why MediaCrawler</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%83%8C%E6%99%AF"><span class="toc-number">1.1.</span> <span class="toc-text">背景</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2-MediaCrawler-%E7%9A%84%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">部署 MediaCrawler 的完整流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%87%86%E5%A4%87-Python-%E7%8E%AF%E5%A2%83"><span class="toc-number">2.1.</span> <span class="toc-text">1. 准备 Python 环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96"><span class="toc-number">2.2.</span> <span class="toc-text">2. 安装依赖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%AE%89%E8%A3%85-Playwright-%E6%B5%8F%E8%A7%88%E5%99%A8%E9%A9%B1%E5%8A%A8"><span class="toc-number">2.3.</span> <span class="toc-text">3. 安装 Playwright 浏览器驱动</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%90%AF%E5%8A%A8%E7%88%AC%E8%99%AB"><span class="toc-number">2.4.</span> <span class="toc-text">4. 启动爬虫</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E9%80%89%E9%A1%B9"><span class="toc-number">2.5.</span> <span class="toc-text">5. 数据存储选项</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E"><span class="toc-number">3.</span> <span class="toc-text">基础配置说明</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E4%BC%98%E5%8C%96%E5%BB%B6%E8%BF%9F%EF%BC%8C%E9%81%BF%E5%85%8D%E8%B4%A6%E5%8F%B7%E5%B0%81%E7%A6%81"><span class="toc-number">4.</span> <span class="toc-text">如何优化延迟，避免账号封禁</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E8%B7%AF%E5%BE%84"><span class="toc-number">4.1.</span> <span class="toc-text">文件路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%AE%E6%94%B9%E5%86%85%E5%AE%B9"><span class="toc-number">4.2.</span> <span class="toc-text">修改内容</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%9C%A8-get-note-detail-async-task-%E6%96%B9%E6%B3%95%E4%B8%AD%E5%8A%A0%E5%85%A5%E5%BB%B6%E8%BF%9F"><span class="toc-number">4.2.1.</span> <span class="toc-text">1. 在 get_note_detail_async_task 方法中加入延迟</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%9C%A8-get-comments-%E6%96%B9%E6%B3%95%E4%B8%AD%E5%8A%A0%E5%85%A5%E5%BB%B6%E8%BF%9F"><span class="toc-number">4.2.2.</span> <span class="toc-text">2. 在 get_comments 方法中加入延迟</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%9C%A8-fetch-creator-notes-detail-%E6%96%B9%E6%B3%95%E4%B8%AD%E5%8A%A0%E5%85%A5%E5%BB%B6%E8%BF%9F"><span class="toc-number">4.2.3.</span> <span class="toc-text">3. 在 fetch_creator_notes_detail 方法中加入延迟</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A3%B0%E6%98%8E"><span class="toc-number">5.</span> <span class="toc-text">声明</span></a></li></ol>
+      
+  </div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.webp" data-sizes="auto" alt="Yichun Lu" class="lazyload">
+  <div class="sidebar-author-name">Yichun Lu</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">3</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">3</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">5</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">首页</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">归档</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">关于</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="友链"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">友链</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/cv" aria-label="简历"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">简历</div>
+    </div>
+  
+</div>
+</div>
+    
+  </div>
+  
+    <div class="sidebar-btn-wrapper">
+      <div class="sidebar-toc-btn current"></div>
+      <div class="sidebar-common-btn"></div>
+    </div>
+  
+</nav>
+
+    </div>
+    
+    
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+  
+<script src="/js/aos.js"></script>
+
+  <script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aosInit);
+    } else {
+      aosInit();
+    }
+  </script>
+
+
+
+<script src="/js/pjax_script.js" data-pjax></script>
+
+
+<script type="module" data-pjax>
+  import PhotoSwipeLightbox from "https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js";
+  
+  const pswp = () => {
+    if (_$$('.article-entry a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-entry',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    if(_$$('.article-gallery a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-gallery',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    window.lightboxStatus = 'done';
+    window.removeEventListener('lightbox:ready', pswp);
+  }
+  if(window.lightboxStatus === 'ready') {
+    pswp()
+  } else {
+    window.addEventListener('lightbox:ready', pswp);
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+<script src="https://npm.webcache.cn/mouse-firework@0.0.4/dist/index.umd.js"></script>
+
+  <script>
+    window.firework && window.firework(JSON.parse('{"excludeElements":["a","button"],"particles":[{"shape":"circle","move":["emit"],"easing":"easeOutExpo","colors":["#ff5252","#ff7c7c","#ffafaf","#ffd0d0"],"number":20,"duration":[1200,1800],"shapeOptions":{"radius":[16,32],"alpha":[0.3,0.5]}},{"shape":"circle","move":["diffuse"],"easing":"easeOutExpo","colors":["#ff0000"],"number":1,"duration":[1200,1800],"shapeOptions":{"radius":20,"alpha":[0.2,0.5],"lineWidth":6}}]}'))
+  </script>
+
+
+
+
+
+
+
+  
+<script src="https://npm.webcache.cn/quicklink@2.3.0/dist/quicklink.umd.js"></script>
+
+  <script data-pjax>
+    window.quicklink?.listen({
+      timeout: 3000,
+      priority: true,
+      ignores: []
+    });
+  </script>
+
+
+<div id="lazy-script">
+  <div>
+    
+  </div>
+</div>
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '0.3.3' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" async></script>
+
+
+
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
+
+  <!-- hexo injector body_end start -->
+<script src="/js/insert_highlight.js" data-pjax></script>
+<!-- hexo injector body_end end --></body>
+  </html>
+
